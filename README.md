@@ -49,6 +49,27 @@ create `.env` with `EXPO_PUBLIC_API_URL=http://<your-PC's-LAN-IP>:3000`.
 5. In the app, change a quantity. The website's header count and cart page
    update too.
 
+## Building the Android APK
+
+The APK talks to the live site and signs in with the `oja://` link scheme, so
+it needs no PC or Expo Go.
+
+Built locally with the Android SDK and JDK 17 (Android Studio installs both):
+
+```bash
+npx expo prebuild --platform android      # generates ./android (git-ignored)
+cd android
+./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a
+# → android/app/build/outputs/apk/release/app-release.apk
+```
+
+The release build is signed with the default debug key. That's fine for
+sideloading and review, but not for the Play Store, which needs an upload key or
+`eas build`.
+
+Or build it in the cloud: `npx eas-cli@latest build -p android --profile preview`
+(needs a free Expo account and an `eas.json` with `"buildType": "apk"`).
+
 ## Project layout
 
 ```
