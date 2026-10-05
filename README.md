@@ -1,56 +1,71 @@
-# Welcome to your Expo app 👋
+# Oja — mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo (React Native) app for the Oja shop. It uses the **same API and the same
+accounts** as the website (`../shop-app`, live at
+https://hng15-shop-app.vercel.app).
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Shop:** product grid and product pages.
+- **Same login as the website:** "Continue with Google" opens the website's own
+  sign-in in the system browser. The site hands the app a one-time code, and the
+  app exchanges it (with PKCE) for a session token, kept in the phone's secure
+  storage. The token is a row in the same `session` table as the website, so it
+  is literally the same account.
+- **Live cart sync:** when the cart changes on any device, the server sends a
+  "cart changed" ping over Supabase Realtime on a private per-user channel. The
+  app and website both refetch at once, so an item added on the website shows up
+  in the app within about a second, and the other way round. The cart tab shows
+  a green "Live" dot while connected. The app also refetches when it returns to
+  the foreground.
+- **Cart:** change quantities and remove items. The tab badge shows the item count.
+- **Checkout:** pay on delivery. The confirmation email comes from the website's
+  Mailgun setup.
+- **Orders:** history and order detail.
 
+## Run it on your phone (Expo Go)
+
+1. Install **Expo Go** from the App Store (iPhone) or Play Store (Android).
+2. On your PC:
    ```bash
    npm install
-   ```
-
-2. Start the app
-
-   ```bash
    npx expo start
    ```
+3. Scan the QR code. On **iPhone** use the Camera app; on **Android** use the
+   scanner inside Expo Go. Your phone and PC must be on the same Wi-Fi. If they
+   can't be, run `npx expo start --tunnel`.
 
-In the output, you'll find options to open the app in a
+The app talks to the live site by default. To use a local dev server instead,
+create `.env` with `EXPO_PUBLIC_API_URL=http://<your-PC's-LAN-IP>:3000`.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Test login and cart sync
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. In the app, open **Account**, tap **Continue with Google** and sign in.
+2. On a computer, sign in to https://hng15-shop-app.vercel.app with the **same
+   Google account**.
+3. Open the app's **Cart** tab, and check the dot says **Live**.
+4. On the website, add a product. It appears in the app within about a second,
+   and the Cart tab badge updates.
+5. In the app, change a quantity. The website's header count and cart page
+   update too.
 
-## Get a fresh project
+## Project layout
 
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+src/app/_layout.tsx          Providers + root stack
+src/app/(tabs)/              Shop, Cart, Account (native tabs)
+src/app/product/[slug].tsx   Product detail
+src/app/checkout.tsx         Checkout form
+src/app/orders/[id].tsx      Order detail / confirmation
+src/lib/api.ts               fetch wrapper (API_URL, bearer token)
+src/lib/auth.tsx             Google sign-in via the website, token storage
+src/lib/cart.tsx             Cart state + Supabase Realtime subscription
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Checks
 
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx tsc --noEmit
+npx expo lint
+npx expo-doctor
+```
